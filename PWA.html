@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hello World PWA</title>
+  <!-- Link al manifest incorporato via Data URI -->
+  <link rel="manifest" href="data:application/manifest+json,%7B%22name%22%3A%22Hello%20World%20PWA%22%2C%22short_name%22%3A%22HelloPWA%22%2C%22start_url%22%3A%22index.html%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23ffffff%22%2C%22theme_color%22%3A%22%2300aaff%22%7D">
+  <meta name="theme-color" content="#00aaff">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      padding: 2rem;
+      background-color: #ffffff;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>Hello World</h1>
+  <p>Questa è una semplice Progressive Web App.</p>
+
+  <script>
+    // Verifica che il browser supporti i service worker
+    if ('serviceWorker' in navigator) {
+      // Definiamo il codice del service worker come stringa
+      const swCode = `
+        const CACHE_NAME = 'hello-world-cache-v1';
+        // Lista delle risorse da mettere in cache
+        const urlsToCache = [
+          '/',
+          '/index.html'
+        ];
+        
+        // Evento di installazione: precache delle risorse
+        self.addEventListener('install', event => {
+          event.waitUntil(
+            caches.open(CACHE_NAME)
+              .then(cache => cache.addAll(urlsToCache))
+          );
+        });
+        
+        // Intercetta le richieste e risponde con la cache (se disponibile) o la rete
+        self.addEventListener('fetch', event => {
+          event.respondWith(
+            caches.match(event.request)
+              .then(response => response || fetch(event.request))
+          );
+        });
+      `;
+      
+      // Creiamo un blob dal codice del service worker
+      const blob = new Blob([swCode], { type: 'application/javascript' });
+      // Creiamo un URL per il blob
+      const swUrl = URL.createObjectURL(blob);
+      
+      // Registriamo il service worker
+      navigator.serviceWorker.register(swUrl)
+        .then(registration => {
+          console.log('Service Worker registrato con successo, scope:', registration.scope);
+        })
+        .catch(error => {
+          console.error('Registrazione del Service Worker fallita:', error);
+        });
+    }
+  </script>
+</body>
+</html>
